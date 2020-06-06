@@ -7,23 +7,23 @@ def remove_paren(country):
 
 
 entso_df = pd.read_csv('entso.csv', header = 0)
+platts_df = pd.read_csv('platts.csv', header = 0)
 
+gppd_df = pd.read_csv('gppd.csv', header = 0)
 
 #clean country
 
 entso_df['country'] = entso_df['country'].apply(lambda x: remove_paren(x))
 
 
-gppd_df = pd.read_csv('gppd.csv', header = 0)
 fuel_thesaurus_df = pd.read_csv('fuel_thesaurus.csv', header = 0)
-
 mapping = dict(fuel_thesaurus_df[['unit_fuel_platts_entsoe', 'plant_primary_fuel_gppd']].values)
+
 entso_df['unit_fuel'] = entso_df['unit_fuel'].str.lower()
+platts_df['UNIT_FUEL'] = platts_df['UNIT_FUEL'].str.lower()
 
 entso_df['unit_fuel'].replace(mapping, inplace = True)
-
-print(entso_df['unit_fuel'])
-
+platts_df['UNIT_FUEL'].replace(mapping, inplace = True)
 
 
 # df = pd.DataFrame()
@@ -36,13 +36,13 @@ print(entso_df['unit_fuel'])
 # print(df_entso.head(5))
 #
 #
-# def hash(sourcedf,destinationdf,*column):
-#     columnName = ''
-#     destinationdf['hash_'+columnName.join(column)] = pd.DataFrame(sourcedf[list(column)].values.sum(axis=1))[0].str.encode('utf-8').apply(lambda x: (hashlib.sha512(x).hexdigest().upper()))
-#
-#
-# hash(df_entso,df_entso,'unit_fuel', 'country')
-# print(df_entso)
+def create_hashed_id(sourcedf,destinationdf,*column):
+    columnName = ''
+    destinationdf['hashed_id'] = pd.DataFrame(sourcedf[list(column)].values.sum(axis=1))[0].str.encode('utf-8').apply(lambda x: (hashlib.sha256(x).hexdigest().upper()))
+
+
+create_hashed_id(entso_df,entso_df,'unit_fuel', 'country', 'unit_name')
+print(entso_df.hashed_id)
 
 
 
