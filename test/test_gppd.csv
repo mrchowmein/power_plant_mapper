@@ -1,0 +1,3 @@
+plant_id,plant_name,latitude,longitude,wepp_id,country,country_long,plant_capacity_mw,plant_primary_fuel,commissioning_year,owner
+WRI1001626,Chasnupp,32.392,71.4616,1025125,PAK,Pakistan,1330,Nuclear,,Pakistan Atomic Energy Commission
+WRI1001665,London Fusion Reactor,31.7131,73.9783,1033194,UK,United Kingdom,350,Nuclear,,London Reactor

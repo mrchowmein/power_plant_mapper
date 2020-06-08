@@ -1,8 +1,19 @@
-import pandas as pd
-import numpy as np
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Mapper.py ingests three source power plant cvs files and attempts create a mapping between
+the different sources by their respective identifiers.
+
+__author__='Jason Chan'
+__version__='0.1.0'
+"""
+
+
+
 import re
 import os
-
+import pandas as pd
+import numpy as np
 
 def filter_by_intersection(df_to_filter, col_to_filter, df_col_to_filter, def2_col):
     intersection = list(np.intersect1d(df_col_to_filter, def2_col))
@@ -29,11 +40,12 @@ def clean_entso(input_df):
     platts_country_dict = {'UNITED KINGDOM': 'ENGLAND & WALES'}
     input_df['country_platts'] = input_df['country'].replace(platts_country_dict)
     input_df['unit_name'] = input_df['unit_name'].str.upper()
-    input_df['unit_fuel'] = entso_df['unit_fuel'].str.lower()
+    input_df['unit_fuel'] = input_df['unit_fuel'].str.lower()
     input_df['plant_name'] = input_df['plant_name'].str.normalize('NFKD').str.encode('ascii',
                                                                                      errors='ignore').str.decode(
         'utf-8')
     input_df['plant_name'] = input_df['plant_name'].str.upper()
+    input_df['plant_name'] = input_df['plant_name'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
     input_df['unit_name'] = input_df['unit_name'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
 
     return input_df
@@ -42,10 +54,9 @@ def clean_platts(input_df):
     # Function returns a cleaned platts df.
     # Function reformat strings so string cases match.
     # also strips strings of symbols and normalizes foreign language
-
+    input_df['plant_id'] = input_df['plant_id'].apply(str)
     input_df['UNIT'] = input_df['UNIT'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
     input_df['PLANT'] = input_df['PLANT'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
-    input_df['plant_id'] = input_df['plant_id'].apply(str)
 
 
     return input_df
@@ -90,9 +101,9 @@ def process_platts(input_df):
 
 def process_gppd(input_df):
     # Function finds the dominate name in the plant_name col.
-    gppd_df.rename(columns={'plant_id': 'gppd_plant_id'}, inplace=True)
+    input_df.rename(columns={'plant_id': 'gppd_plant_id'}, inplace=True)
 
-    return gppd_df
+    return input_df
 
 def merge_power_plant_dfs(entso_df, platts_df, gppd_df):
     #plant_name, fuel, and country
@@ -111,7 +122,7 @@ def merge_power_plant_dfs(entso_df, platts_df, gppd_df):
     output_df = output_df[output_df['unit_match'] == True]
     output_df = output_df.merge(gppd_df, left_on=['plant_id'], right_on=['wepp_id'])
 
-    #drop duplicates after merging gppd_df while keeping the last row. gppd only includes plant info.
+    # drop duplicates after merging gppd_df while keeping the last row. gppd only includes plant info.
     # thus, duplicates point to the same plants. dropping first or last shouldn't make too much of a difference
     output_df.drop_duplicates(subset="entso_unit_id", keep='last', inplace=True)
     return output_df
@@ -145,7 +156,7 @@ if __name__ == "__main__":
     gppd_df = process_gppd(gppd_df)
 
     # merge dataframes
-    output_df = merge_power_plant_dfs(entso_df, platts_df, gppd_df)
+    output_csv_df = merge_power_plant_dfs(entso_df, platts_df, gppd_df)
 
     #output to csv
-    create_csv(output_df, "mapping")
+    create_csv(output_csv_df, "mapping")

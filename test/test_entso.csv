@@ -1,0 +1,4 @@
+unit_id,unit_capacity_mw,unit_fuel,country,unit_name,plant_name,plant_capacity_mw
+123,10,Fossil Hard coal,France (F),Nice 2,Nice Energy,45
+456,25,Fossil Gas,Germany (DE),FrAnkfurt 6,DE_Energy,90
+9865,200,Nuclear,United Kingdom (UK),London Fusion 1,London Fusion Reactor,390
