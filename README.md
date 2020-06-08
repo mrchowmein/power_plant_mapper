@@ -16,3 +16,8 @@ High-Level Logic:
    we can drop all but one of the rows that have all 3 identifiers.
 7. Lastly, the cleaned up and merged data frame will be saved as a CSV file.
 
+
+Percent power plants mapped: 34%
+General challenges: Fuel type and name were by the easiest way to merge the data. However parsing the strings was the primary challenge as some names were totally different or in a different language between datasets. While contextually I can see the matches, it was a challenge creating an algorithm to match names that were in different langages.
+
+Future improvements: With the adoption of NLP that works with more than one language. More plants can be mapped.
