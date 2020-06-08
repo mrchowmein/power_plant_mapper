@@ -16,7 +16,7 @@ def create_hashed_id(sourcedf,destinationdf,*column):
     destinationdf['hashed_id'] = pd.DataFrame(sourcedf[list(column)].values.sum(axis=1))[0].str.encode('utf-8').apply(lambda x: (hashlib.sha256(x).hexdigest().upper()))
 
 #read in data
-entso_df = pd.read_csv('entso.csv', header = 0)
+entso_df = pd.read_csv('entso_l.csv', header = 0)
 platts_df = pd.read_csv('platts.csv', header = 0)
 gppd_df = pd.read_csv('gppd.csv', header = 0)
 fuel_thesaurus_df = pd.read_csv('fuel_thesaurus.csv', header = 0)
@@ -31,21 +31,21 @@ entso_df['unit_name'] = entso_df['unit_name'].str.upper()
 entso_df['unit_name'] = entso_df['unit_name'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
 platts_df['UNIT'] = platts_df['UNIT'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
 platts_df['PLANT'] = platts_df['PLANT'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
+
+platts_df['plant_id'] = platts_df['plant_id'].apply(str)
+
 entso_df['country_platts'] = entso_df['country'].replace('UNITED KINGDOM', 'ENGLAND & WALES')
 entso_df['plant_name'] = entso_df['plant_name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
 
+#'plant_name', 'country_long', 'plant_primary_fuel'
+gppd_df['plant_name'] = gppd_df['plant_name'].str.upper()
+gppd_df['country_long'] = gppd_df['country_long'].str.upper()
+gppd_df['plant_primary_fuel'] = gppd_df['plant_primary_fuel'].str.upper()
+gppd_df['plant_name'] = gppd_df['plant_name'].apply(lambda x: re.sub(r'[^a-zA-Z0-9]+', ' ', x))
 
 #entso_df['country'] = entso_df['country'].apply(lambda x: remove_paren(x))
 
-
-#
-# print(country_intersection)
-# print(len(country_intersection))
-
-
-
-
-#mapping = dict(fuel_thesaurus_df[['unit_fuel_platts_entsoe', 'plant_primary_fuel_gppd']].values)
+ping = dict(fuel_thesaurus_df[['unit_fuel_platts_entsoe', 'plant_primary_fuel_gppd']].values)
 
 entso_df['unit_fuel'] = entso_df['unit_fuel'].str.lower()
 #platts_df['UNIT_FUEL'] = platts_df['UNIT_FUEL'].str.lower()
@@ -61,13 +61,15 @@ entso_df['plant_primary_fuel_gppd'] = entso_df['plant_primary_fuel_gppd'].str.up
 #print(entso_df[['unit_capacity_mw', 'unit_fuel','unit_fuel_platts_entsoe']])
 
 
-print(entso_df[['plant_name', 'plant_primary_fuel_gppd']])
+print(gppd_df.info())
 #platts_df['UNIT_FUEL'].replace(mapping, inplace = True)
 
 entso_df = entso_df.drop(['plant_capacity_mw', 'unit_fuel_platts_entsoe', 'note'], axis=1)
 
 print(entso_df.info())
-
+entso_df.rename(columns={'unit_id': 'entso_unit_id'}, inplace=True)
+platts_df.rename(columns={ 'unit_id': 'platts_unit_id'}, inplace=True)
+gppd_df.rename(columns={ 'plant_id': 'gppd_plant_id'}, inplace=True)
 country_intersect_platts = find_intersection(platts_df['COUNTRY'].values, entso_df['country_platts'].values)
 
 platts_df = platts_df.drop(['SUBREGION', 'AREA', 'STATE', 'CITY', 'YEAR'], axis=1)
@@ -87,21 +89,37 @@ print(platts_df.info())
 # entso_df = entso_df.reset_index(drop=True)
 # platts_df = platts_df.reset_index(drop=True)
 
+
 output_df = entso_df.merge(platts_df, left_on=['plant_name', 'plant_primary_fuel_gppd', 'country'], right_on=['PLANT', 'UNIT_FUEL', 'COUNTRY'], how='inner')
 
 #output_df = output_df.query("unit_name == UNIT")
+
 output_df['unit_match'] = output_df.apply(lambda row: max(row.unit_name.split(), key=len) in row.UNIT and
                                                       row.unit_name[-1] == row.UNIT[-1] and
                                                       (row.unit_capacity_mw*.8 < row.UNIT_CAPACITY_MW < row.unit_capacity_mw*1.2),
                                           axis=1)
 output_df = output_df[output_df['unit_match'] == True]
 #output_df = output_df[['unit_id_x', 'unit_id_y']]
-output_df.to_csv("output.csv")
+
+
+
+
+output_df = output_df.merge(gppd_df, left_on=['plant_id'], right_on=['wepp_id'])
+
+print(output_df.info())
+
+output_df.drop_duplicates(subset ="entso_unit_id", keep = 'last', inplace = True)
+
+output_df = output_df[['entso_unit_id','platts_unit_id','gppd_plant_id']]
+
+output_df.to_csv("mapping.csv", index=False)
 
 print(output_df.head(5))
 
-output_diff = find_diff(output_df['unit_id_x'].values, entso_df['unit_id'].values)
-print(list(output_diff))
+# output_diff = find_diff(output_df['unit_id_x'].values, entso_df['unit_id'].values)
+#
+# non_entso_df = entso_df[entso_df['unit_id'].isin(list(output_diff))]
+# print(non_entso_df)
 #print(output_df[['plant_primary_fuel_gppd', 'country_platts', 'unit_name']])
 
 
