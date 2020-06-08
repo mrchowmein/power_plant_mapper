@@ -138,23 +138,27 @@ def load_csv(file_name, directory='./'):
 
 
 if __name__ == "__main__":
+    print("Reading in data \n")
     # read in data
     entso_df = load_csv('entso.csv')
     platts_df = load_csv('platts.csv')
     gppd_df = load_csv('gppd.csv')
     fuel_thesaurus_df = load_csv('fuel_thesaurus.csv')
 
+    print("Cleaning data \n")
     # clean dataframes
     entso_df = clean_entso(entso_df)
     platts_df = clean_platts(platts_df)
     gppd_df = clean_gppd(gppd_df)
 
+    print("Transforming data \n")
     # process/transform dataframes
     entso_df = add_fuel_thesaurus(entso_df, fuel_thesaurus_df)
     entso_df = process_entso(entso_df)
     platts_df = process_platts(platts_df)
     gppd_df = process_gppd(gppd_df)
 
+    print("Merging data \n")
     # merge dataframes
     output_csv_df = merge_power_plant_dfs(entso_df, platts_df, gppd_df)
 

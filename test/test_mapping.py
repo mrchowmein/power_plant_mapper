@@ -24,6 +24,7 @@ class MappingTestCase(unittest.TestCase):
         self.assertEqual(df_p.iloc[0, 3], 'FRANKFURT B6')
         self.assertEqual(df_p.iloc[1, 2], 'LONDON FUSION REACTOR')
 
+
     def test_clean_gppd(self):
         df_g = pd.read_csv("test_gppd.csv", header=0)
         df_g = clean_gppd(df_g)
@@ -31,6 +32,7 @@ class MappingTestCase(unittest.TestCase):
         print(df_g.iloc[1, 1])
         self.assertEqual(df_g.iloc[0, 8], 'NUCLEAR')
         self.assertEqual(df_g.iloc[1, 1], 'LONDON FUSION REACTOR')
+
 
 if __name__ == '__main__':
     unittest.main()
