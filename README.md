@@ -1,4 +1,7 @@
-# mapping_repo
+# Power Plant Mapper
+
+Mapper.py ingests three source power plant cvs files and attempts create a mapping between
+the different sources by their respective identifiers.
 
 To run, navigate to the folder with mapping.py and type the following into your terminal.
 
